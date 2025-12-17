@@ -1,0 +1,245 @@
+version: "3.9"
+
+services:
+  # --- Kafka KRaft controllers ---
+  kafka-controller-1:
+    image: apache/kafka:4.1.1
+    container_name: kafka-controller-1
+    command: >
+      bash -c "
+      /opt/kafka/bin/kafka-storage.sh format
+        --config /etc/kafka/controller.properties
+        --cluster-id=kraft-cluster-0001
+        --ignore-formatted;
+      /opt/kafka/bin/kafka-server-start.sh /etc/kafka/controller.properties
+      "
+    environment:
+      KAFKA_LOG_DIRS: /var/lib/kafka
+    volumes:
+      - ./kafka/kraft/controller-1.properties:/etc/kafka/controller.properties
+      - kafka-controller-1-data:/var/lib/kafka
+    networks: [appnet]
+
+  kafka-controller-2:
+    image: apache/kafka:4.1.1
+    container_name: kafka-controller-2
+    command: >
+      bash -c "
+      /opt/kafka/bin/kafka-storage.sh format
+        --config /etc/kafka/controller.properties
+        --cluster-id=kraft-cluster-0001
+        --ignore-formatted;
+      /opt/kafka/bin/kafka-server-start.sh /etc/kafka/controller.properties
+      "
+    environment:
+      KAFKA_LOG_DIRS: /var/lib/kafka
+    volumes:
+      - ./kafka/kraft/controller-2.properties:/etc/kafka/controller.properties
+      - kafka-controller-2-data:/var/lib/kafka
+    networks: [appnet]
+
+  kafka-controller-3:
+    image: apache/kafka:4.1.1
+    container_name: kafka-controller-3
+    command: >
+      bash -c "
+      /opt/kafka/bin/kafka-storage.sh format
+        --config /etc/kafka/controller.properties
+        --cluster-id=kraft-cluster-0001
+        --ignore-formatted;
+      /opt/kafka/bin/kafka-server-start.sh /etc/kafka/controller.properties
+      "
+    environment:
+      KAFKA_LOG_DIRS: /var/lib/kafka
+    volumes:
+      - ./kafka/kraft/controller-3.properties:/etc/kafka/controller.properties
+      - kafka-controller-3-data:/var/lib/kafka
+    networks: [appnet]
+
+  # --- Kafka KRaft brokers ---
+  kafka-broker-1:
+    image: apache/kafka:4.1.1
+    container_name: kafka-broker-1
+    depends_on: [kafka-controller-1, kafka-controller-2, kafka-controller-3]
+    ports:
+      - "19092:19092"
+    command: >
+      bash -c "
+      /opt/kafka/bin/kafka-storage.sh format
+        --config /etc/kafka/server.properties
+        --cluster-id=kraft-cluster-0001
+        --ignore-formatted;
+      /opt/kafka/bin/kafka-server-start.sh /etc/kafka/server.properties
+      "
+    environment:
+      KAFKA_LOG_DIRS: /var/lib/kafka
+    volumes:
+      - ./kafka/kraft/broker-1.properties:/etc/kafka/server.properties
+      - kafka-broker-1-data:/var/lib/kafka
+    networks: [appnet]
+
+  kafka-broker-2:
+    image: apache/kafka:4.1.1
+    container_name: kafka-broker-2
+    depends_on: [kafka-controller-1, kafka-controller-2, kafka-controller-3]
+    ports:
+      - "19093:19093"
+    command: >
+      bash -c "
+      /opt/kafka/bin/kafka-storage.sh format
+        --config /etc/kafka/server.properties
+        --cluster-id=kraft-cluster-0001
+        --ignore-formatted;
+      /opt/kafka/bin/kafka-server-start.sh /etc/kafka/server.properties
+      "
+    environment:
+      KAFKA_LOG_DIRS: /var/lib/kafka
+    volumes:
+      - ./kafka/kraft/broker-2.properties:/etc/kafka/server.properties
+      - kafka-broker-2-data:/var/lib/kafka
+    networks: [appnet]
+
+  kafka-broker-3:
+    image: apache/kafka:4.1.1
+    container_name: kafka-broker-3
+    depends_on: [kafka-controller-1, kafka-controller-2, kafka-controller-3]
+    ports:
+      - "19094:19094"
+    command: >
+      bash -c "
+      /opt/kafka/bin/kafka-storage.sh format
+        --config /etc/kafka/server.properties
+        --cluster-id=kraft-cluster-0001
+        --ignore-formatted;
+      /opt/kafka/bin/kafka-server-start.sh /etc/kafka/server.properties
+      "
+    environment:
+      KAFKA_LOG_DIRS: /var/lib/kafka
+    volumes:
+      - ./kafka/kraft/broker-3.properties:/etc/kafka/server.properties
+      - kafka-broker-3-data:/var/lib/kafka
+    networks: [appnet]
+
+  # --- Schema Registry (Avro) ---
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.6.1
+    container_name: schema-registry
+    depends_on: [kafka-broker-1, kafka-broker-2, kafka-broker-3]
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka-broker-1:9092,PLAINTEXT://kafka-broker-2:9093,PLAINTEXT://kafka-broker-3:9094
+      SCHEMA_REGISTRY_AVRO_COMPATIBILITY_LEVEL: BACKWARD
+    ports:
+      - "8081:8081"
+    networks: [appnet]
+
+  # --- Kafka Connect (Debezium + sinks) ---
+  kafka-connect:
+    image: debezium/connect:2.7
+    container_name: kafka-connect
+    depends_on: [kafka-broker-1, schema-registry, postgres, liquibase-migrator]
+    environment:
+      BOOTSTRAP_SERVERS: kafka-broker-1:9092,kafka-broker-2:9093,kafka-broker-3:9094
+      GROUP_ID: connect-cluster
+      CONFIG_STORAGE_TOPIC: _connect-configs
+      OFFSET_STORAGE_TOPIC: _connect-offsets
+      STATUS_STORAGE_TOPIC: _connect-status
+      KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+      VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      REST_ADVERTISED_HOST_NAME: kafka-connect
+      CONNECT_ERRORS_LOG_ENABLE: true
+      CONNECT_PLUGIN_PATH: /kafka/connect/plugins
+    volumes:
+      - ./connect-configs:/kafka/connect/connect-configs
+      - ./plugins:/kafka/connect/plugins
+    ports:
+      - "8083:8083"
+    networks: [appnet]
+
+  # --- PostgreSQL ---
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: appsecret
+      POSTGRES_DB: musicdb
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks: [appnet]
+
+  # --- Liquibase migrator (applies DB schema, partitions, publications, signal tables) ---
+  liquibase-migrator:
+    image: liquibase/liquibase:4.29
+    container_name: liquibase-migrator
+    depends_on: [postgres]
+    volumes:
+      - ./liquibase:/liquibase
+    entrypoint:
+      - /bin/sh
+      - -c
+      - "/liquibase/docker-entrypoint.sh"
+    networks: [appnet]
+
+  # --- Elasticsearch (community single-node) ---
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    networks: [appnet]
+
+  # --- OpenSearch (single-node) + Dashboards ---
+  opensearch:
+    image: opensearchproject/opensearch:2.14.0
+    container_name: opensearch
+    environment:
+      - discovery.type=single-node
+      - plugins.security.disabled=true
+      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9201:9200"
+    networks: [appnet]
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.14.0
+    container_name: opensearch-dashboards
+    environment:
+      - OPENSEARCH_HOSTS=["http://opensearch:9200"]
+    ports:
+      - "5601:5601"
+    depends_on: [opensearch]
+    networks: [appnet]
+
+  # --- Spring Boot search API (JDK 25) ---
+  search-api:
+    build:
+      context: ./search-api
+      dockerfile: Dockerfile
+    container_name: search-api
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on: [elasticsearch, opensearch]
+    ports:
+      - "8080:8080"
+    networks: [appnet]
+
+networks:
+  appnet: {}
+
+volumes:
+  kafka-controller-1-data: {}
+  kafka-controller-2-data: {}
+  kafka-controller-3-data: {}
+  kafka-broker-1-data: {}
+  kafka-broker-2-data: {}
+  kafka-broker-3-data: {}
+  postgres-data: {}
