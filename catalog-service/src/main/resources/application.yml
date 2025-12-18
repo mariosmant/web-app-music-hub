@@ -1,0 +1,36 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: search-api
+
+resilience4j.circuitbreaker:
+  instances:
+    esBreaker:
+      slidingWindowType: COUNT_BASED
+      slidingWindowSize: 20
+      failureRateThreshold: 50
+      waitDurationInOpenState: 10s
+    osBreaker:
+      slidingWindowType: COUNT_BASED
+      slidingWindowSize: 20
+      failureRateThreshold: 50
+      waitDurationInOpenState: 10s
+
+resilience4j.retry:
+  instances:
+    esRetry:
+      maxAttempts: 3
+      waitDuration: 500ms
+    osRetry:
+      maxAttempts: 3
+      waitDuration: 500ms
+
+app:
+  elasticsearch:
+    host: http://elasticsearch:9200
+    index: tracks
+  opensearch:
+    host: http://opensearch:9200
+    index: tracks

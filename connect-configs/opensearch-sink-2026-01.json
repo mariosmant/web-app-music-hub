@@ -1,0 +1,17 @@
+{
+  "name": "opensearch-tracks-2026-01-sink",
+  "config": {
+    "connector.class": "io.aiven.kafka.connect.opensearch.OpensearchSinkConnector",
+    "tasks.max": "1",
+    "topics": "tracks.cdc.2026_01",
+    "connection.url": "http://opensearch:9200",
+    "index": "tracks_2026_01",
+    "key.ignore": "true",
+    "schema.ignore": "true",
+    "behavior.on.null.values": "delete",
+    "max.retries": "10",
+    "retry.backoff.ms": "2000",
+    "errors.tolerance": "all",
+    "errors.deadletterqueue.topic.name": "_dlq_os_2026_01"
+  }
+}

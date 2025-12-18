@@ -1,0 +1,42 @@
+{
+  "name": "pg-tracks-2026-01-cdc",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "tasks.max": "1",
+
+    "database.hostname": "postgres",
+    "database.port": "5432",
+    "database.user": "appuser",
+    "database.password": "appsecret",
+    "database.dbname": "musicdb",
+    "database.server.name": "pg",
+
+    "slot.name": "debezium_tracks_2026_01",
+    "publication.name": "debezium_pub",
+    "plugin.name": "pgoutput",
+
+    "table.include.list": "public.tracks_2026_01",
+    "tombstones.on.delete": "false",
+    "include.schema.changes": "false",
+
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter.schema.registry.url": "http://schema-registry:8081",
+
+    "transforms": "extract,route,v2k",
+    "transforms.extract.type": "org.apache.kafka.connect.transforms.ExtractField$Value",
+    "transforms.extract.field": "after",
+    "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
+    "transforms.route.regex": "pg\\.public\\.tracks_2026_01",
+    "transforms.route.replacement": "tracks.cdc.2026_01",
+    "transforms.v2k.type": "org.apache.kafka.connect.transforms.ValueToKey",
+    "transforms.v2k.fields": "track_id",
+
+    "errors.tolerance": "all",
+    "errors.deadletterqueue.topic.name": "_dlq_pg_2026_01",
+    "errors.deadletterqueue.context.headers.enable": "true",
+
+    "signal.enabled": "true",
+    "signal.data.collection": "public.debezium_signal_tracks_2026_01"
+  }
+}
