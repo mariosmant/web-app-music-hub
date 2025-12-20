@@ -5,7 +5,6 @@ import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.connect.connector.ConnectRecord;
 import org.apache.kafka.connect.header.Headers;
 import org.apache.kafka.connect.transforms.Transformation;
-import org.apache.kafka.connect.transforms.util.Requirements;
 
 public class AddPortHeader<R extends ConnectRecord<R>> implements Transformation<R> {
 
@@ -14,11 +13,16 @@ public class AddPortHeader<R extends ConnectRecord<R>> implements Transformation
 
     @Override
     public R apply(R record) {
-        Requirements.requireNotNull(record, "record");
+        if (record == null) {
+            return null;
+        }
+
         Headers headers = record.headers();
         headers.addString("x-index-port", portValue);
+
         return record;
     }
+
 
     @Override
     public ConfigDef config() {

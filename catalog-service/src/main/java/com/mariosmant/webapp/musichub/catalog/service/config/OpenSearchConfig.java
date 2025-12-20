@@ -1,13 +1,14 @@
 package com.mariosmant.webapp.musichub.catalog.service.config;
 
 import org.apache.http.HttpHost;
-import org.opensearch.client.transport.rest_client.RestClientTransport;
-import org.opensearch.client.json.jackson.JacksonJsonpMapper;
 import org.opensearch.client.RestClient;
+import org.opensearch.client.json.jackson.JacksonJsonpMapper;
 import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.transport.rest_client.RestClientTransport;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
 
 @Configuration
 public class OpenSearchConfig {
@@ -17,9 +18,13 @@ public class OpenSearchConfig {
 
     @Bean
     public OpenSearchClient openSearchClient() {
-        RestClient restClient = RestClient.builder(HttpHost.create(osHost)).build();
-        RestClientTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
-        OpenSearchClient client = new OpenSearchClient(transport);
-        return client;
+        RestClient restClient = RestClient.builder(
+                HttpHost.create(osHost)
+        ).build();
+
+        RestClientTransport transport =
+                new RestClientTransport(restClient, new JacksonJsonpMapper());
+
+        return new OpenSearchClient(transport);
     }
 }

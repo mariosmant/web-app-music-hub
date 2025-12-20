@@ -2,7 +2,7 @@ package com.mariosmant.webapp.musichub.catalog.service.controller;
 
 import java.util.List;
 import java.util.Map;
-import com.mariosmant.webapp.musichub.catalog.service.service.ElasticsearchTrackSearchService;
+import com.mariosmant.webapp.musichub.catalog.service.service.ElasticSearchTrackSearchService;
 import com.mariosmant.webapp.musichub.catalog.service.service.OpenSearchTrackSearchService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
@@ -13,10 +13,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/search")
 public class TrackSearchController {
 
-    private final ElasticsearchTrackSearchService esService;
+    private final ElasticSearchTrackSearchService esService;
     private final OpenSearchTrackSearchService osService;
 
-    public TrackSearchController(ElasticsearchTrackSearchService esService,
+    public TrackSearchController(ElasticSearchTrackSearchService esService,
                                  OpenSearchTrackSearchService osService) {
         this.esService = esService;
         this.osService = osService;

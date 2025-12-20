@@ -23,7 +23,7 @@
     "value.converter": "io.confluent.connect.avro.AvroConverter",
     "value.converter.schema.registry.url": "http://schema-registry:8081",
 
-    "transforms": "extract,route,v2k",
+    "transforms": "extract,route,v2k,port",
     "transforms.extract.type": "org.apache.kafka.connect.transforms.ExtractField$Value",
     "transforms.extract.field": "after",
     "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
@@ -31,6 +31,9 @@
     "transforms.route.replacement": "tracks.cdc.2026_01",
     "transforms.v2k.type": "org.apache.kafka.connect.transforms.ValueToKey",
     "transforms.v2k.fields": "track_id",
+    "transforms.port.type": "com.mariosmant.webapp.musichub.connect.smt.AddPortHeader",
+    "transforms.port.portValue": "9000",
+
 
     "errors.tolerance": "all",
     "errors.deadletterqueue.topic.name": "_dlq_pg_2026_01",

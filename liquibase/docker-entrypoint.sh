@@ -1,11 +1,10 @@
 #!/bin/sh
 set -e
 
-# Wait for Postgres
-until nc -z postgres 5432; do
-  echo "Waiting for Postgres..."
-  sleep 2
-done
+# echo "Waiting for Postgres..."
+# until wget -qO- postgres:5432 >/dev/null 2>&1; do
+#   sleep 2
+# done
 
 echo "Applying Liquibase changelog..."
 liquibase \
