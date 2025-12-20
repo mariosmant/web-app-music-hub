@@ -1,0 +1,13 @@
+SELECT public.create_month_partition(2025, 12);
+SELECT public.create_month_partition(2026, 1);
+SELECT public.create_month_partition(2026, 2);
+SELECT public.create_month_partition(2026, 3);
+SELECT public.create_month_partition(2026, 4);
+SELECT public.create_month_partition(2026, 5);
+SELECT public.create_month_partition(2026, 6);
+SELECT public.create_month_partition(2026, 7);
+SELECT public.create_month_partition(2026, 8);
+SELECT public.create_month_partition(2026, 9);
+SELECT public.create_month_partition(2026, 10);
+SELECT public.create_month_partition(2026, 11);
+SELECT public.create_month_partition(2026, 12);

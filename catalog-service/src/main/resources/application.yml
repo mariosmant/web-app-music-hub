@@ -3,7 +3,10 @@ server:
 
 spring:
   application:
-    name: search-api
+    name: catalog-service
+  elasticsearch:
+    uris: ${app.elasticsearch.host}
+
 
 resilience4j.circuitbreaker:
   instances:

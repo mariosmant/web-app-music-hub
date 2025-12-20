@@ -19,9 +19,16 @@
     "tombstones.on.delete": "false",
     "include.schema.changes": "false",
 
-    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-    "value.converter": "io.confluent.connect.avro.AvroConverter",
-    "value.converter.schema.registry.url": "http://schema-registry:8081",
+    "key.converter": "io.apicurio.registry.utils.converter.AvroConverter",
+    "value.converter": "io.apicurio.registry.utils.converter.AvroConverter",
+    "key.converter.apicurio.registry.url": "http://apicurio-registry:8080/apis/registry/v2",
+    "value.converter.apicurio.registry.url": "http://apicurio-registry:8080/apis/registry/v2",
+
+    "key.converter.apicurio.registry.auto-register": "true",
+    "value.converter.apicurio.registry.auto-register": "true",
+
+    "key.converter.apicurio.registry.find-latest": "true",
+    "value.converter.apicurio.registry.find-latest": "true",
 
     "transforms": "extract,route,v2k,port",
     "transforms.extract.type": "org.apache.kafka.connect.transforms.ExtractField$Value",

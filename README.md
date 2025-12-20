@@ -13,6 +13,14 @@ Sets up:
 ## Prerequisites
 - Docker and Docker Compose.
 - Java 25 + Maven (to build the custom SMT, optional).
+- Create apicurio DB and user:
+```sql
+CREATE DATABASE apicurio;
+
+CREATE USER apicurio WITH PASSWORD 'secret';
+GRANT ALL PRIVILEGES ON DATABASE apicurio TO apicurio;
+
+```
 
 ## Build custom SMT (optional)
 ```bash

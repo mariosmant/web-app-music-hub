@@ -1,0 +1,54 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-extensions
+      author: system
+      changes:
+        - sqlFile:
+            path: 001_create_extensions.sql
+            relativeToChangelogFile: true
+  - changeSet:
+      id: 002-create-tracks_table
+      author: system
+      changes:
+        - sqlFile:
+            path: 002_create_tracks_table.sql
+            relativeToChangelogFile: true
+  - changeSet:
+      id: 003-tracks-partitioned
+      author: system
+      changes:
+        - sqlFile:
+            path: 003_tracks_partitioned.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+            endDelimiter: $$
+  - changeSet:
+      id: 004-create-track-partitions
+      author: system
+      changes:
+        - sqlFile:
+            path: 004_create_track_partitions.sql
+            relativeToChangelogFile: true
+  - changeSet:
+      id: 005-publication
+      author: system
+      changes:
+        - sqlFile:
+            path: 005_publication.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+            endDelimiter: $$
+  - changeSet:
+      id: 006-signal-tables
+      author: system
+      changes:
+        - sqlFile:
+            path: 006_signal_tables.sql
+            relativeToChangelogFile: true
+  - changeSet:
+      id: 007-seed-data
+      author: system
+      changes:
+        - sqlFile:
+            path: 007_seed_data.sql
+            relativeToChangelogFile: true

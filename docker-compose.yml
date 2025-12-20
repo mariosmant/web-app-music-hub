@@ -134,20 +134,58 @@ services:
       - "8081:8081"
     networks: [appnet]
 
+  ##############################
+  # Apicurio Registry (Avro)   #
+  ##############################
+  apicurio-registry:
+    image: apicurio/apicurio-registry:latest-release
+    container_name: apicurio-registry
+    depends_on:
+      - postgres
+    ports:
+      - "8082:8080"    # Apicurio runs on 8080 internally
+    environment:
+      - QUARKUS_HTTP_PORT=8080
+      - APICURIO_STORAGE_KIND=sql
+      - APICURIO_STORAGE_SQL_KIND=postgresql
+      - APICURIO_DATASOURCE_URL=jdbc:postgresql://postgres/apicurio
+      - APICURIO_DATASOURCE_USERNAME=apicurio
+      - APICURIO_DATASOURCE_PASSWORD=secret
+    networks: [ appnet ]
+
   # --- Kafka Connect (Debezium + sinks) ---
   kafka-connect:
     image: quay.io/debezium/connect:2.7
     container_name: kafka-connect
-    depends_on: [kafka-broker-1, schema-registry, postgres, liquibase-migrator]
+    depends_on:
+      - kafka-broker-1
+      - kafka-broker-2
+      - kafka-broker-3
+      - apicurio-registry
+      - postgres
     environment:
+      # Kafka cluster bootstrap
       BOOTSTRAP_SERVERS: kafka-broker-1:9092,kafka-broker-2:9093,kafka-broker-3:9094
+
+      # Connect internal group & storage topics
       GROUP_ID: connect-cluster
       CONFIG_STORAGE_TOPIC: _connect-configs
       OFFSET_STORAGE_TOPIC: _connect-offsets
       STATUS_STORAGE_TOPIC: _connect-status
-      KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
-      VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
-      VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+
+      # Enable Apicurio Avro converters
+      ENABLE_APICURIO_CONVERTERS: "true"
+      KEY_CONVERTER: io.apicurio.registry.utils.converter.AvroConverter
+      VALUE_CONVERTER: io.apicurio.registry.utils.converter.AvroConverter
+      KEY_CONVERTER_APICURIO_REGISTRY_URL: http://apicurio-registry:8080/apis/registry/v2
+      VALUE_CONVERTER_APICURIO_REGISTRY_URL: http://apicurio-registry:8080/apis/registry/v2
+
+      KEY_CONVERTER_APICURIO_REGISTRY_AUTO_REGISTER: "true"
+      VALUE_CONVERTER_APICURIO_REGISTRY_AUTO_REGISTER: "true"
+
+      KEY_CONVERTER_APICURIO_REGISTRY_FIND_LATEST: "true"
+      VALUE_CONVERTER_APICURIO_REGISTRY_FIND_LATEST: "true"
+
       REST_ADVERTISED_HOST_NAME: kafka-connect
       CONNECT_ERRORS_LOG_ENABLE: true
       CONNECT_PLUGIN_PATH: /kafka/connect/plugins
@@ -162,11 +200,6 @@ services:
   postgres:
     image: postgres:16
     container_name: postgres
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U appuser"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
     environment:
       POSTGRES_USER: appuser
       POSTGRES_PASSWORD: appsecret
@@ -175,18 +208,6 @@ services:
       - postgres-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    networks: [appnet]
-
-  # --- Liquibase migrator (applies DB schema, partitions, publications, signal tables) ---
-  liquibase-migrator:
-    image: liquibase/liquibase:4.29
-    container_name: liquibase-migrator
-    depends_on:
-      postgres:
-        condition: service_healthy
-    volumes:
-      - ./liquibase:/liquibase
-    command: ["/bin/sh", "/liquibase/docker-entrypoint.sh"]
     networks: [appnet]
 
   # --- Elasticsearch (community single-node) ---
@@ -209,6 +230,7 @@ services:
       - discovery.type=single-node
       - plugins.security.disabled=true
       - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=MyStrongPass123!
     ports:
       - "9201:9200"
     networks: [appnet]
