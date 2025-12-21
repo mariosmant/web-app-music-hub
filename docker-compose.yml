@@ -1,16 +1,11 @@
-version: "3.9"
-
 services:
   # --- Kafka KRaft controllers ---
   kafka-controller-1:
     image: apache/kafka:4.1.1
     container_name: kafka-controller-1
-    command: >
-      bash -c "
-      /opt/kafka/bin/kafka-storage.sh format
-        --config /etc/kafka/controller.properties
-        --cluster-id=kraft-cluster-0001
-        --ignore-formatted;
+    command: |
+      bash -c "  
+      /opt/kafka/bin/kafka-storage.sh format --config /etc/kafka/controller.properties --cluster-id kraft-cluster-0001 --ignore-formatted &&
       /opt/kafka/bin/kafka-server-start.sh /etc/kafka/controller.properties
       "
     environment:
@@ -18,17 +13,16 @@ services:
     volumes:
       - ./kafka/kraft/controller-1.properties:/etc/kafka/controller.properties
       - kafka-controller-1-data:/var/lib/kafka
+      - ./kafka/certs/controller-1/kafka-controller-1-keystore.p12:/etc/kafka/secrets/keystore.p12:ro
+      - ./kafka/certs/truststore/kafka-truststore.p12:/etc/kafka/secrets/truststore.p12:ro
     networks: [appnet]
 
   kafka-controller-2:
     image: apache/kafka:4.1.1
     container_name: kafka-controller-2
-    command: >
+    command: |
       bash -c "
-      /opt/kafka/bin/kafka-storage.sh format
-        --config /etc/kafka/controller.properties
-        --cluster-id=kraft-cluster-0001
-        --ignore-formatted;
+      /opt/kafka/bin/kafka-storage.sh format --config /etc/kafka/controller.properties --cluster-id kraft-cluster-0001 --ignore-formatted &&
       /opt/kafka/bin/kafka-server-start.sh /etc/kafka/controller.properties
       "
     environment:
@@ -36,17 +30,16 @@ services:
     volumes:
       - ./kafka/kraft/controller-2.properties:/etc/kafka/controller.properties
       - kafka-controller-2-data:/var/lib/kafka
+      - ./kafka/certs/controller-2/kafka-controller-2-keystore.p12:/etc/kafka/secrets/keystore.p12:ro
+      - ./kafka/certs/truststore/kafka-truststore.p12:/etc/kafka/secrets/truststore.p12:ro
     networks: [appnet]
 
   kafka-controller-3:
     image: apache/kafka:4.1.1
     container_name: kafka-controller-3
-    command: >
+    command: |
       bash -c "
-      /opt/kafka/bin/kafka-storage.sh format
-        --config /etc/kafka/controller.properties
-        --cluster-id=kraft-cluster-0001
-        --ignore-formatted;
+      /opt/kafka/bin/kafka-storage.sh format --config /etc/kafka/controller.properties --cluster-id kraft-cluster-0001 --ignore-formatted &&
       /opt/kafka/bin/kafka-server-start.sh /etc/kafka/controller.properties
       "
     environment:
@@ -54,6 +47,8 @@ services:
     volumes:
       - ./kafka/kraft/controller-3.properties:/etc/kafka/controller.properties
       - kafka-controller-3-data:/var/lib/kafka
+      - ./kafka/certs/controller-3/kafka-controller-3-keystore.p12:/etc/kafka/secrets/keystore.p12:ro
+      - ./kafka/certs/truststore/kafka-truststore.p12:/etc/kafka/secrets/truststore.p12:ro
     networks: [appnet]
 
   # --- Kafka KRaft brokers ---
@@ -63,12 +58,9 @@ services:
     depends_on: [kafka-controller-1, kafka-controller-2, kafka-controller-3]
     ports:
       - "19092:19092"
-    command: >
+    command: |
       bash -c "
-      /opt/kafka/bin/kafka-storage.sh format
-        --config /etc/kafka/server.properties
-        --cluster-id=kraft-cluster-0001
-        --ignore-formatted;
+      /opt/kafka/bin/kafka-storage.sh format --config /etc/kafka/server.properties --cluster-id kraft-cluster-0001 --ignore-formatted &&
       /opt/kafka/bin/kafka-server-start.sh /etc/kafka/server.properties
       "
     environment:
@@ -76,20 +68,19 @@ services:
     volumes:
       - ./kafka/kraft/broker-1.properties:/etc/kafka/server.properties
       - kafka-broker-1-data:/var/lib/kafka
+      - ./kafka/certs/broker-1/kafka-broker-1-keystore.p12:/etc/kafka/secrets/keystore.p12:ro
+      - ./kafka/certs/truststore/kafka-truststore.p12:/etc/kafka/secrets/truststore.p12:ro
     networks: [appnet]
 
   kafka-broker-2:
     image: apache/kafka:4.1.1
     container_name: kafka-broker-2
-    depends_on: [kafka-controller-1, kafka-controller-2, kafka-controller-3]
+    depends_on: [ kafka-controller-1, kafka-controller-2, kafka-controller-3 ]
     ports:
-      - "19093:19093"
-    command: >
+      - "19093:19092"
+    command: |
       bash -c "
-      /opt/kafka/bin/kafka-storage.sh format
-        --config /etc/kafka/server.properties
-        --cluster-id=kraft-cluster-0001
-        --ignore-formatted;
+      /opt/kafka/bin/kafka-storage.sh format --config /etc/kafka/server.properties --cluster-id kraft-cluster-0001 --ignore-formatted &&
       /opt/kafka/bin/kafka-server-start.sh /etc/kafka/server.properties
       "
     environment:
@@ -97,20 +88,19 @@ services:
     volumes:
       - ./kafka/kraft/broker-2.properties:/etc/kafka/server.properties
       - kafka-broker-2-data:/var/lib/kafka
-    networks: [appnet]
+      - ./kafka/certs/broker-2/kafka-broker-2-keystore.p12:/etc/kafka/secrets/keystore.p12:ro
+      - ./kafka/certs/truststore/kafka-truststore.p12:/etc/kafka/secrets/truststore.p12:ro
+    networks: [ appnet ]
 
   kafka-broker-3:
     image: apache/kafka:4.1.1
     container_name: kafka-broker-3
-    depends_on: [kafka-controller-1, kafka-controller-2, kafka-controller-3]
+    depends_on: [ kafka-controller-1, kafka-controller-2, kafka-controller-3 ]
     ports:
-      - "19094:19094"
-    command: >
+      - "19094:19092"
+    command: |
       bash -c "
-      /opt/kafka/bin/kafka-storage.sh format
-        --config /etc/kafka/server.properties
-        --cluster-id=kraft-cluster-0001
-        --ignore-formatted;
+      /opt/kafka/bin/kafka-storage.sh format --config /etc/kafka/server.properties --cluster-id kraft-cluster-0001 --ignore-formatted &&
       /opt/kafka/bin/kafka-server-start.sh /etc/kafka/server.properties
       "
     environment:
@@ -118,7 +108,9 @@ services:
     volumes:
       - ./kafka/kraft/broker-3.properties:/etc/kafka/server.properties
       - kafka-broker-3-data:/var/lib/kafka
-    networks: [appnet]
+      - ./kafka/certs/broker-3/kafka-broker-3-keystore.p12:/etc/kafka/secrets/keystore.p12:ro
+      - ./kafka/certs/truststore/kafka-truststore.p12:/etc/kafka/secrets/truststore.p12:ro
+    networks: [ appnet ]
 
   # --- Schema Registry (Avro) ---
   schema-registry:

@@ -1,0 +1,22 @@
+services:
+  cert-generator:
+    image: alpine:3.20
+    container_name: kafka-cert-generator
+    command: ["/bin/sh", "-c", "/scripts/generate-kafka-certs.sh"]
+    volumes:
+      - ../kafka/certs:/certs
+      - ./scripts/generate-kafka-certs.sh:/scripts/generate-kafka-certs.sh:ro
+    environment:
+      CA_CN: "MyOrg Root CA"
+      ORG_NAME: "MyOrg"
+      COUNTRY: "EU"
+      STATE: "Test"
+      LOCALITY: "Test"
+      KAFKA_CONTROLLER_1_KEYSTORE_PASSWORD:
+      KAFKA_CONTROLLER_2_KEYSTORE_PASSWORD:
+      KAFKA_CONTROLLER_3_KEYSTORE_PASSWORD:
+      KAFKA_BROKER_1_KEYSTORE_PASSWORD:
+      KAFKA_BROKER_2_KEYSTORE_PASSWORD:
+      KAFKA_BROKER_3_KEYSTORE_PASSWORD:
+      TRUSTSTORE_PASSWORD:
+    # Run manually: docker compose run --rm cert-generator

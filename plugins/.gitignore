@@ -1,6 +1,6 @@
 
-/*
-!custom-smt
+/**
+!custom-smt/
 
 target/
 !.mvn/wrapper/maven-wrapper.jar
