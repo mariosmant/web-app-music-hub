@@ -3,6 +3,11 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+/connect-configs/*
+!/connect-configs/debezium-tracks-*
+!/connect-configs/es-sink-*
+!/connect-configs/opensearch-sink-*
+
 ### IntelliJ IDEA ###
 .idea/
 .idea/modules.xml

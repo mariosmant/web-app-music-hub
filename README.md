@@ -13,13 +13,15 @@ Sets up:
 ## Prerequisites
 - Docker and Docker Compose.
 - Java 25 + Maven (to build the custom SMT, optional).
-- Create apicurio DB and user:
+- Create apicurio DB, open it in pgAdmin, and then create the user using the following:
 ```sql
 CREATE DATABASE apicurio;
 
 CREATE USER apicurio WITH PASSWORD 'secret';
 GRANT ALL PRIVILEGES ON DATABASE apicurio TO apicurio;
-
+GRANT USAGE ON SCHEMA public TO apicurio;
+GRANT CREATE ON SCHEMA public TO apicurio;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO apicurio;
 ```
 
 ## Build custom SMT (optional)

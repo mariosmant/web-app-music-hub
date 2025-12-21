@@ -64,7 +64,7 @@ services:
       /opt/kafka/bin/kafka-server-start.sh /etc/kafka/server.properties
       "
     environment:
-      KAFKA_LOG_DIRS: /var/lib/kafka
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
     volumes:
       - ./kafka/kraft/broker-1.properties:/etc/kafka/server.properties
       - kafka-broker-1-data:/var/lib/kafka
@@ -84,7 +84,7 @@ services:
       /opt/kafka/bin/kafka-server-start.sh /etc/kafka/server.properties
       "
     environment:
-      KAFKA_LOG_DIRS: /var/lib/kafka
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
     volumes:
       - ./kafka/kraft/broker-2.properties:/etc/kafka/server.properties
       - kafka-broker-2-data:/var/lib/kafka
@@ -104,7 +104,7 @@ services:
       /opt/kafka/bin/kafka-server-start.sh /etc/kafka/server.properties
       "
     environment:
-      KAFKA_LOG_DIRS: /var/lib/kafka
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
     volumes:
       - ./kafka/kraft/broker-3.properties:/etc/kafka/server.properties
       - kafka-broker-3-data:/var/lib/kafka
@@ -113,15 +113,25 @@ services:
     networks: [ appnet ]
 
   # --- Schema Registry (Avro) ---
-  schema-registry:
+  kafka-confl-schema-registry:
     image: confluentinc/cp-schema-registry:7.6.1
-    container_name: schema-registry
+    container_name: kafka-confl-schema-registry
     depends_on: [kafka-broker-1, kafka-broker-2, kafka-broker-3]
     environment:
-      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_HOST_NAME: kafka-confl-schema-registry
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
-      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka-broker-1:9092,PLAINTEXT://kafka-broker-2:9093,PLAINTEXT://kafka-broker-3:9094
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: SSL://kafka-broker-1:9092,SSL://kafka-broker-2:9092,SSL://kafka-broker-3:9092
+      SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: SSL
+      SCHEMA_REGISTRY_KAFKASTORE_SSL_KEYSTORE_LOCATION: /etc/schema-registry/secrets/keystore.p12
+      SCHEMA_REGISTRY_KAFKASTORE_SSL_KEYSTORE_PASSWORD: ${KAFKA_CONFL_SCHEMA_REGISTRY_KEYSTORE_PASSWORD}
+      SCHEMA_REGISTRY_KAFKASTORE_SSL_KEY_PASSWORD: ${KAFKA_CONFL_SCHEMA_REGISTRY_KEYSTORE_PASSWORD}
+      SCHEMA_REGISTRY_KAFKASTORE_SSL_TRUSTSTORE_LOCATION: /etc/schema-registry/secrets/truststore.p12
+      SCHEMA_REGISTRY_KAFKASTORE_SSL_TRUSTSTORE_PASSWORD: ${TRUSTSTORE_PASSWORD}
+
       SCHEMA_REGISTRY_AVRO_COMPATIBILITY_LEVEL: BACKWARD
+    volumes:
+      - ./kafka/certs/confl-schema-registry/kafka-confl-schema-registry-keystore.p12:/etc/schema-registry/secrets/keystore.p12:ro
+      - ./kafka/certs/truststore/kafka-truststore.p12:/etc/schema-registry/secrets/truststore.p12:ro
     ports:
       - "8081:8081"
     networks: [appnet]
@@ -155,20 +165,46 @@ services:
       - kafka-broker-3
       - apicurio-registry
       - postgres
-    environment:
-      # Kafka cluster bootstrap
-      BOOTSTRAP_SERVERS: kafka-broker-1:9092,kafka-broker-2:9093,kafka-broker-3:9094
 
-      # Connect internal group & storage topics
+    environment:
+      # ------------------------------------------------------------
+      # Kafka Connect worker SSL configuration (correct prefixes)
+      # ------------------------------------------------------------
+      BOOTSTRAP_SERVERS: kafka-broker-1:9092,kafka-broker-2:9092,kafka-broker-3:9092
+
+      CONNECT_SECURITY_PROTOCOL: SSL
+      CONNECT_SSL_KEYSTORE_LOCATION: /etc/kafka-connect/secrets/keystore.p12
+      CONNECT_SSL_KEYSTORE_PASSWORD: ${KAFKA_CONNECT_KEYSTORE_PASSWORD}
+      CONNECT_SSL_KEY_PASSWORD: ${KAFKA_CONNECT_KEYSTORE_PASSWORD}
+      CONNECT_SSL_KEYSTORE_TYPE: PKCS12
+
+      CONNECT_SSL_TRUSTSTORE_LOCATION: /etc/kafka-connect/secrets/truststore.p12
+      CONNECT_SSL_TRUSTSTORE_PASSWORD: ${TRUSTSTORE_PASSWORD}
+      CONNECT_SSL_TRUSTSTORE_TYPE: PKCS12
+
+      # Enable hostname verification (your certs are correct)
+      CONNECT_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: https
+
+      # ------------------------------------------------------------
+      # Internal Kafka Connect topics
+      # ------------------------------------------------------------
       GROUP_ID: connect-cluster
       CONFIG_STORAGE_TOPIC: _connect-configs
       OFFSET_STORAGE_TOPIC: _connect-offsets
       STATUS_STORAGE_TOPIC: _connect-status
 
-      # Enable Apicurio Avro converters
+      CONFIG_STORAGE_REPLICATION_FACTOR: 3
+      OFFSET_STORAGE_REPLICATION_FACTOR: 3
+      STATUS_STORAGE_REPLICATION_FACTOR: 3
+
+      # ------------------------------------------------------------
+      # Apicurio converters
+      # ------------------------------------------------------------
       ENABLE_APICURIO_CONVERTERS: "true"
+
       KEY_CONVERTER: io.apicurio.registry.utils.converter.AvroConverter
       VALUE_CONVERTER: io.apicurio.registry.utils.converter.AvroConverter
+
       KEY_CONVERTER_APICURIO_REGISTRY_URL: http://apicurio-registry:8080/apis/registry/v2
       VALUE_CONVERTER_APICURIO_REGISTRY_URL: http://apicurio-registry:8080/apis/registry/v2
 
@@ -178,15 +214,26 @@ services:
       KEY_CONVERTER_APICURIO_REGISTRY_FIND_LATEST: "true"
       VALUE_CONVERTER_APICURIO_REGISTRY_FIND_LATEST: "true"
 
+      # ------------------------------------------------------------
+      # REST API
+      # ------------------------------------------------------------
       REST_ADVERTISED_HOST_NAME: kafka-connect
-      CONNECT_ERRORS_LOG_ENABLE: true
-      CONNECT_PLUGIN_PATH: /kafka/connect/plugins
+      REST_PORT: 8083
+
+      # ------------------------------------------------------------
+      # Plugins
+      # ------------------------------------------------------------
+      PLUGIN_PATH: /kafka/connect/plugins
+      ERRORS_LOG_ENABLE: "true"
     volumes:
       - ./connect-configs:/kafka/connect/connect-configs
       - ./plugins:/kafka/connect/plugins
+      - ./kafka/certs/connect/kafka-connect-keystore.p12:/etc/kafka-connect/secrets/keystore.p12:ro
+      - ./kafka/certs/truststore/kafka-truststore.p12:/etc/kafka-connect/secrets/truststore.p12:ro
     ports:
       - "8083:8083"
-    networks: [appnet]
+    networks:
+      - appnet
 
   # --- PostgreSQL ---
   postgres:
