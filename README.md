@@ -23,6 +23,7 @@ GRANT USAGE ON SCHEMA public TO apicurio;
 GRANT CREATE ON SCHEMA public TO apicurio;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO apicurio;
 ```
+- Generate certs in `kafka/certs` folder, via `cert-generator/docker-compose.yml`. See `README.md` from `cert-generator` for more details.
 
 ## Build custom SMT (optional)
 ```bash
