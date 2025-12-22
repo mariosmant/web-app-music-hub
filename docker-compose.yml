@@ -13,8 +13,8 @@ services:
     volumes:
       - ./kafka/kraft/controller-1.properties:/etc/kafka/controller.properties
       - kafka-controller-1-data:/var/lib/kafka
-      - ./kafka/certs/controller-1/kafka-controller-1-keystore.p12:/etc/kafka/secrets/keystore.p12:ro
-      - ./kafka/certs/truststore/kafka-truststore.p12:/etc/kafka/secrets/truststore.p12:ro
+      - ./kafka/generated/certs/controller-1/kafka-controller-1-keystore.p12:/etc/kafka/secrets/keystore.p12:ro
+      - ./kafka/generated/certs/truststore/kafka-truststore.p12:/etc/kafka/secrets/truststore.p12:ro
     networks: [appnet]
 
   kafka-controller-2:
@@ -30,8 +30,8 @@ services:
     volumes:
       - ./kafka/kraft/controller-2.properties:/etc/kafka/controller.properties
       - kafka-controller-2-data:/var/lib/kafka
-      - ./kafka/certs/controller-2/kafka-controller-2-keystore.p12:/etc/kafka/secrets/keystore.p12:ro
-      - ./kafka/certs/truststore/kafka-truststore.p12:/etc/kafka/secrets/truststore.p12:ro
+      - ./kafka/generated/certs/controller-2/kafka-controller-2-keystore.p12:/etc/kafka/secrets/keystore.p12:ro
+      - ./kafka/generated/certs/truststore/kafka-truststore.p12:/etc/kafka/secrets/truststore.p12:ro
     networks: [appnet]
 
   kafka-controller-3:
@@ -47,8 +47,8 @@ services:
     volumes:
       - ./kafka/kraft/controller-3.properties:/etc/kafka/controller.properties
       - kafka-controller-3-data:/var/lib/kafka
-      - ./kafka/certs/controller-3/kafka-controller-3-keystore.p12:/etc/kafka/secrets/keystore.p12:ro
-      - ./kafka/certs/truststore/kafka-truststore.p12:/etc/kafka/secrets/truststore.p12:ro
+      - ./kafka/generated/certs/controller-3/kafka-controller-3-keystore.p12:/etc/kafka/secrets/keystore.p12:ro
+      - ./kafka/generated/certs/truststore/kafka-truststore.p12:/etc/kafka/secrets/truststore.p12:ro
     networks: [appnet]
 
   # --- Kafka KRaft brokers ---
@@ -68,8 +68,8 @@ services:
     volumes:
       - ./kafka/kraft/broker-1.properties:/etc/kafka/server.properties
       - kafka-broker-1-data:/var/lib/kafka
-      - ./kafka/certs/broker-1/kafka-broker-1-keystore.p12:/etc/kafka/secrets/keystore.p12:ro
-      - ./kafka/certs/truststore/kafka-truststore.p12:/etc/kafka/secrets/truststore.p12:ro
+      - ./kafka/generated/certs/broker-1/kafka-broker-1-keystore.p12:/etc/kafka/secrets/keystore.p12:ro
+      - ./kafka/generated/certs/truststore/kafka-truststore.p12:/etc/kafka/secrets/truststore.p12:ro
     networks: [appnet]
 
   kafka-broker-2:
@@ -88,8 +88,8 @@ services:
     volumes:
       - ./kafka/kraft/broker-2.properties:/etc/kafka/server.properties
       - kafka-broker-2-data:/var/lib/kafka
-      - ./kafka/certs/broker-2/kafka-broker-2-keystore.p12:/etc/kafka/secrets/keystore.p12:ro
-      - ./kafka/certs/truststore/kafka-truststore.p12:/etc/kafka/secrets/truststore.p12:ro
+      - ./kafka/generated/certs/broker-2/kafka-broker-2-keystore.p12:/etc/kafka/secrets/keystore.p12:ro
+      - ./kafka/generated/certs/truststore/kafka-truststore.p12:/etc/kafka/secrets/truststore.p12:ro
     networks: [ appnet ]
 
   kafka-broker-3:
@@ -108,8 +108,8 @@ services:
     volumes:
       - ./kafka/kraft/broker-3.properties:/etc/kafka/server.properties
       - kafka-broker-3-data:/var/lib/kafka
-      - ./kafka/certs/broker-3/kafka-broker-3-keystore.p12:/etc/kafka/secrets/keystore.p12:ro
-      - ./kafka/certs/truststore/kafka-truststore.p12:/etc/kafka/secrets/truststore.p12:ro
+      - ./kafka/generated/certs/broker-3/kafka-broker-3-keystore.p12:/etc/kafka/secrets/keystore.p12:ro
+      - ./kafka/generated/certs/truststore/kafka-truststore.p12:/etc/kafka/secrets/truststore.p12:ro
     networks: [ appnet ]
 
   # --- Schema Registry (Avro) ---
@@ -130,8 +130,8 @@ services:
 
       SCHEMA_REGISTRY_AVRO_COMPATIBILITY_LEVEL: BACKWARD
     volumes:
-      - ./kafka/certs/confl-schema-registry/kafka-confl-schema-registry-keystore.p12:/etc/schema-registry/secrets/keystore.p12:ro
-      - ./kafka/certs/truststore/kafka-truststore.p12:/etc/schema-registry/secrets/truststore.p12:ro
+      - ./kafka/generated/certs/confl-schema-registry/kafka-confl-schema-registry-keystore.p12:/etc/schema-registry/secrets/keystore.p12:ro
+      - ./kafka/generated/certs/truststore/kafka-truststore.p12:/etc/schema-registry/secrets/truststore.p12:ro
     ports:
       - "8081:8081"
     networks: [appnet]
@@ -226,10 +226,9 @@ services:
       PLUGIN_PATH: /kafka/connect/plugins
       ERRORS_LOG_ENABLE: "true"
     volumes:
-      - ./connect-configs:/kafka/connect/connect-configs
-      - ./plugins:/kafka/connect/plugins
-      - ./kafka/certs/connect/kafka-connect-keystore.p12:/etc/kafka-connect/secrets/keystore.p12:ro
-      - ./kafka/certs/truststore/kafka-truststore.p12:/etc/kafka-connect/secrets/truststore.p12:ro
+      - ./kafka/generated/connect/plugins:/kafka/connect/plugins
+      - ./kafka/generated/certs/connect/kafka-connect-keystore.p12:/etc/kafka-connect/secrets/keystore.p12:ro
+      - ./kafka/generated/certs/truststore/kafka-truststore.p12:/etc/kafka-connect/secrets/truststore.p12:ro
     ports:
       - "8083:8083"
     networks:

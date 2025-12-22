@@ -44,5 +44,7 @@ build/
 .DS_Store
 
 
-/kafka/certs/**
-!/kafka/certs/.gitkeep
+/kafka/generated/certs/**
+!/kafka/generated/certs/.gitkeep
+/kafka/generated/connect/plugins/**
+!/kafka/generated/connect/plugins/.gitkeep
