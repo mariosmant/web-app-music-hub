@@ -11,6 +11,8 @@
     "database.dbname": "musicdb",
     "database.server.name": "pg",
 
+    "topic.prefix": "pg_tracks_2026_01",
+
     "slot.name": "debezium_tracks_2026_01",
     "publication.name": "debezium_pub",
     "plugin.name": "pgoutput",
