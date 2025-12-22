@@ -7,6 +7,9 @@ Sets up:
 - Elasticsearch and OpenSearch sinks with **distinct DLQs**.
 - Spring Boot (JDK 25) search API with 2 endpoints (no auth for now).
 
+![Infrastructure & Deployment Architecture Diagram](docs/infrastructure_and_deployment_architecture_diagram.png)
+
+
 ## Why Liquibase here?
 - Best practice for production: migrations are versioned and automated via CI/CD. The API is only a query layer; indexing is done by Kafka Connect sinks, so Liquibase runs as a separate migrator service (not inside the query API) to keep responsibilities clean. This mirrors large-scale setups where data pipelines and application services are decoupled.
 
